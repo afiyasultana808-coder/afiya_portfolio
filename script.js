@@ -233,10 +233,65 @@ function initTypingEffect() {
 // Initialize typing effect
 setTimeout(initTypingEffect, 500);
 
+// Contact Form Handler - Backend Integration
+document.addEventListener('DOMContentLoaded', () => {
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formStatus = document.getElementById('formStatus');
+            const submitText = document.getElementById('submitText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const submitBtn = contactForm.querySelector('button[type="submit"]');
+            
+            // Show loading
+            submitText.style.display = 'none';
+            loadingSpinner.style.display = 'inline';
+            submitBtn.disabled = true;
+            formStatus.innerHTML = '<span style="color: #f59e0b;">Sending message...</span>';
+            
+            try {
+                const formData = {
+                    name: document.getElementById('name').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    message: document.getElementById('message').value.trim()
+                };
+
+                const response = await fetch('http://localhost:5000/api/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    formStatus.innerHTML = `<span style="color: #10b981;">✅ ${result.message}</span>`;
+                    contactForm.reset();
+                } else {
+                    formStatus.innerHTML = `<span style="color: #ef4444;">❌ ${result.message}</span>`;
+                }
+            } catch (error) {
+                console.error('Form submission error:', error);
+                formStatus.innerHTML = '<span style="color: #ef4444;">❌ Connection error. Is backend running on port 5000?</span>';
+            } finally {
+                // Reset button
+                submitText.style.display = 'inline';
+                loadingSpinner.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+    }
+});
+
 // Console Greeting
 console.log('%c 👋 Hey there!', 'font-size: 24px; font-weight: bold; color: #6366f1;');
 console.log('%c Welcome to Afiya Sultana\'s Portfolio', 'font-size: 16px; color: #475569;');
-console.log('%c Built with HTML, CSS & JavaScript 💜', 'font-size: 14px; color: #ec4899;');
+console.log('%c Backend API: http://localhost:5000/api/contact ✅', 'font-size: 14px; color: #10b981;');
+console.log('%c Built with HTML, CSS & JavaScript + Node.js/Express 💜', 'font-size: 14px; color: #ec4899;');
 
 // Performance: Debounce
 function debounce(func, wait) {
