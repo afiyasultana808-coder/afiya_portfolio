@@ -337,10 +337,126 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// Contact Form Submission
+function initContactForm() {
+    const contactForm = document.getElementById('contactForm');
+    
+    if (!contactForm) {
+        console.warn('Contact form not found in HTML');
+        return;
+    }
+
+    contactForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const submitBtn = contactForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        
+        try {
+            // Get form data
+            const name = document.getElementById('name')?.value.trim();
+            const email = document.getElementById('email')?.value.trim();
+            const message = document.getElementById('message')?.value.trim();
+
+            // Client-side validation
+            if (!name || !email || !message) {
+                showContactMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+
+            // Send to backend
+            const response = await fetch('http://localhost:5000/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    message: message
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showContactMessage('Message sent successfully! I\'ll get back to you soon.', 'success');
+                contactForm.reset();
+                submitBtn.textContent = 'Message Sent! ✓';
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }, 3000);
+            } else {
+                showContactMessage(data.message || 'Failed to send message', 'error');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Contact form error:', error);
+            showContactMessage('Network error. Please check your connection and try again.', 'error');
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+}
+
+function showContactMessage(message, type) {
+    // Remove existing message
+    const existingMessage = document.querySelector('.contact-message');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+
+    // Create message element
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `contact-message contact-message-${type}`;
+    messageDiv.textContent = message;
+    messageDiv.style.cssText = `
+        padding: 1rem;
+        margin-top: 1rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        font-weight: 500;
+        animation: fadeInUp 0.3s ease;
+        ${type === 'success' 
+            ? 'background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);'
+            : 'background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);'
+        }
+    `;
+
+    // Find form and insert message
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) {
+        contactForm.appendChild(messageDiv);
+    }
+
+    // Auto-remove error messages after 5 seconds
+    if (type === 'error') {
+        setTimeout(() => {
+            messageDiv.style.opacity = '0';
+            messageDiv.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => messageDiv.remove(), 300);
+        }, 5000);
+    }
+}
+
+// Initialize contact form
+document.addEventListener('DOMContentLoaded', () => {
+    initContactForm();
+});
+
 // Export for testing
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         debounce,
-        updateThemeIcon
+        updateThemeIcon,
+        initContactForm
     };
 }
