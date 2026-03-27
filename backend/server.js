@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
-    password: 'password',
+    password: 'Root/777/999',
     database: 'portfolio_db',
     waitForConnections: true,
     connectionLimit: 10,
